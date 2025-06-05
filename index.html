@@ -39,6 +39,7 @@
     <div id="chat"></div>
     <input type="text" id="user-input" placeholder="Type your message...">
     <button id="send-btn">Send</button>
+    <button id="clear-btn">Clear</button>
 
     <script>
         async function callGeminiDirectly(userMessage, apiKey) {
@@ -81,6 +82,7 @@
         const chatDiv = document.getElementById('chat');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
+        const clearBtn = document.getElementById('clear-btn');
 
         function appendMessage(text, className) {
             const messageEl = document.createElement('div');
@@ -100,6 +102,9 @@
         }
 
         sendBtn.addEventListener('click', sendMessage);
+        clearBtn.addEventListener('click', function () {
+            chatDiv.innerHTML = '';
+        });
         userInput.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 sendMessage();
