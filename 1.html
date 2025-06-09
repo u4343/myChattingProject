@@ -1574,7 +1574,7 @@ function generateDailyShift() {
             }
             
             // 선택된 메이드의 대화 횟수가 0이면 예약 불가능
-            if (allPlayableMaids[selectedMaadKey] && allPlayableMaids[selectedMaidKey].dailyTurnsLeft <= 0) {
+            if (allPlayableMaids[selectedMaidKey] && allPlayableMaids[selectedMaidKey].dailyTurnsLeft <= 0) {
                 alert(`'${allPlayableMaids[selectedMaidKey].name}' 메이드와의 대화 횟수를 모두 사용했습니다. 이 메이드는 예약할 수 없습니다.`);
                 return;
             }
