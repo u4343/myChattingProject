@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메이드 카페 - 주인님의 공간</title>
+    <style>
+        /* 기본 스타일 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px; /* 전체 패딩 줄임 */
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            width: 98%; /* 너비 조정 */
+            max-width: 1200px;
+            height: 95vh; /* 높이 조정 */
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* 상태 패널 */
+        .status-panel {
+            width: 300px; /* 너비 조금 늘림 */
+            background-color: #ffe0f2; /* 밝은 핑크 */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border-right: 1px solid #f8bbd0;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            overflow-y: auto; /* 내용 많아지면 스크롤 */
+        }
+        .status-panel h3 {
+            color: #e91e63;
+            margin-top: 0;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #f8bbd0;
+            padding-bottom: 5px;
+            font-size: 1.3em;
+        }
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 5px;
+        }
+        .status-item strong {
+            color: #c2185b;
+            font-size: 0.95em;
+            margin-bottom: 3px;
+        }
+        .status-item span {
+            font-size: 1.05em;
+            color: #333;
+            word-break: break-all;
+        }
+        .status-item.current-time {
+            font-size: 1.15em;
+            font-weight: bold;
+            color: #2196f3;
+        }
+        .game-time-control {
+            background-color: #e0f2f7;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        .game-time-control strong {
+            color: #0d47a1;
+            font-size: 1em;
+        }
+        .game-time-control button {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+            width: 100%; /* 버튼 너비 확장 */
+        }
+        .game-time-control button:hover {
+            background-color: #1976d2;
+        }
+
+        /* 채팅 영역 */
+        .chat-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            background-color: #e91e63;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.3em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .hamburger-menu {
+            display: none; /* 기본적으로 숨김 */
+            font-size: 1.8em;
+            cursor: pointer;
+            color: white;
+            position: absolute;
+            left: 15px;
+        }
+        .current-character-display {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-grow: 1;
+            justify-content: center;
+        }
+        .current-character-display .icon {
+            font-size: 1.6em;
+        }
+
+        /* 캐릭터/룸 선택, 예약, 초기화 패널 */
+        .control-panel {
+            background-color: #fce4ec;
+            padding: 15px;
+            border-bottom: 1px solid #f8bbd0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto; /* 작은 화면에서 스크롤 가능하게 */
+            flex-shrink: 0;
+        }
+        .control-panel label {
+            font-weight: bold;
+            color: #c2185b;
+            font-size: 1em;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .button-group button {
+            background-color: #ff80ab;
+            color: white;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .button-group button:hover:not(.active) {
+            background-color: #e91e63;
+            transform: translateY(-1px);
+        }
+        .button-group button.active {
+            background-color: #c2185b;
+            border: 2px solid #880e4f;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        #master-tempus-btn {
+            background-color: #607d8b;
+        }
+        #master-tempus-btn:hover:not(.active) {
+            background-color: #455a64;
+        }
+        #master-tempus-btn.active {
+            background-color: #37474f;
+            border: 2px solid #1a237e;
+        }
+        #clear-btn {
+            background-color: #f44336;
+            width: fit-content;
+            align-self: flex-end;
+            margin-top: 10px;
+        }
+        #clear-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        /* 예약 영역 */
+        .reservation-area {
+            background-color: #fce4ec;
+            padding: 15px;
+            border-top: 1px solid #f8bbd0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
+            display: none; /* 기본적으로 숨김 */
+        }
+        .reservation-area.active {
+            display: flex;
+        }
+        .reservation-area input[type="number"],
+        .reservation-area select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+            width: 100%; /* 너비 조정 */
+            max-width: 200px;
+            box-sizing: border-box;
+        }
+        .reservation-area button {
+            background-color: #e91e63;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: fit-content;
+        }
+        .reservation-area button:hover {
+            background-color: #c2185b;
+        }
+        .reservation-status {
+            font-weight: bold;
+            color: #e91e63;
+            font-size: 1.05em;
+        }
+        .reservation-status.active-chat {
+            color: #4caf50;
+        }
+        .reservation-status.expired-chat {
+            color: #f44336;
+        }
+
+        /* 채팅 메시지 영역 */
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 85%; /* 최대 너비 조정 */
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 1.05em;
+            line-height: 1.5;
+            word-wrap: break-word; /* 긴 단어 줄바꿈 */
+        }
+        .user {
+            background-color: #dcf8c2;
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 5px; /* 말풍선 꼬리 효과 */
+        }
+        .bot {
+            background-color: #ffe0f2;
+            align-self: flex-start;
+            margin-right: auto;
+            border-bottom-left-radius: 5px; /* 말풍선 꼬리 효과 */
+        }
+        .message .icon {
+            font-size: 1.2em;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .message .user-label {
+            font-weight: bold;
+            flex-shrink: 0;
+            color: #555;
+        }
+
+        /* 입력 영역 */
+        .input-area {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #eee;
+            background-color: #fff;
+            gap: 10px;
+        }
+        .input-area input {
+            flex-grow: 1;
+            padding: 12px 18px;
+            border: 1px solid #ccc;
+            border-radius: 25px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+        }
+        .input-area input:focus {
+            border-color: #e91e63;
+            outline: none;
+        }
+        .input-area button {
+            background-color: #e91e63;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+        .input-area button:disabled {
+            background-color: #ffcdd2;
+            cursor: not-allowed;
+        }
+
+        /* 모바일 반응형 */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            .container {
+                flex-direction: column;
+                height: 98vh; /* 모바일에서 전체 높이 사용 */
+                border-radius: 0; /* 모바일에서 테두리 제거 */
+                box-shadow: none;
+            }
+            .status-panel {
+                width: 100%;
+                height: auto;
+                max-height: 50%; /* 숨겨질 때를 대비한 최대 높이 */
+                position: fixed; /* 모바일에서 고정 */
+                top: 0;
+                left: 0;
+                transform: translateX(-100%); /* 기본적으로 숨김 */
+                z-index: 100;
+                transition: transform 0.3s ease-in-out;
+                border-bottom: 1px solid #f8bbd0;
+                border-right: none;
+                padding-bottom: 60px; /* 햄버거 메뉴 닫기 버튼 공간 확보 */
+            }
+            .status-panel.active {
+                transform: translateX(0); /* 활성화 시 보임 */
+            }
+            .hamburger-menu {
+                display: block; /* 모바일에서 보임 */
+            }
+            .chat-header {
+                justify-content: flex-end; /* 햄버버 메뉴 공간 확보 */
+            }
+            .current-character-display {
+                margin-left: 50px; /* 햄버거 메뉴 아이콘 공간 */
+            }
+            .control-panel {
+                padding: 10px;
+                gap: 10px;
+            }
+            .control-panel label {
+                font-size: 0.95em;
+            }
+            .button-group button {
+                padding: 7px 12px;
+                font-size: 0.85em;
+            }
+            #clear-btn {
+                width: 100%;
+                text-align: center;
+            }
+            .chat-messages {
+                padding: 15px;
+                gap: 10px;
+            }
+            .message {
+                max-width: 90%;
+                font-size: 0.95em;
+                padding: 8px 12px;
+            }
+            .input-area {
+                padding: 10px;
+                gap: 8px;
+            }
+            .input-area input {
+                padding: 10px 15px;
+                font-size: 0.95em;
+            }
+            .input-area button {
+                padding: 10px 15px;
+                font-size: 0.95em;
+            }
+            .reservation-area input[type="number"],
+            .reservation-area select {
+                max-width: 100%;
+            }
+            .reservation-area button {
+                width: 100%;
+                text-align: center;
+            }
+            .close-status-panel-btn {
+                display: block; /* 모바일에서 보임 */
+                position: absolute;
+                bottom: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: #c2185b;
+                color: white;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 0.9em;
+                width: 80%;
+            }
+        </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-panel" id="status-panel">
+            <h3>📖 주인님 상태창</h3>
+            <div class="status-item current-time">
+                <strong>게임 내 시간:</strong>
+                <span id="game-current-time-status"></span>
+            </div>
+            <div class="status-item">
+                <strong>현재 위치:</strong>
+                <span id="current-room-status">프론트</span>
+            </div>
+            <div class="status-item">
+                <strong>선택된 메이드:</strong>
+                <span id="current-maid-status">없음</span>
+            </div>
+            <div class="status-item reservation-info">
+                <strong>예약 현황:</strong>
+                <span id="reservation-brief-status">예약 없음</span>
+            </div>
+            <div class="status-item">
+                <strong>남은 대화 횟수:</strong>
+                <span id="turns-left-brief-status">0</span>
+            </div>
+            <hr style="border-top: 1px dashed #f8bbd0; width: 100%;">
+            <div class="game-time-control">
+                <strong>시간 전진:</strong>
+                <button id="forward-1hour">1시간 전진</button>
+                <button id="forward-1day">1일 전진 (출근부 갱신)</button>
+            </div>
+            <button class="close-status-panel-btn" id="close-status-panel-btn">닫기</button>
+        </div>
+
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="hamburger-menu" id="hamburger-menu">☰</div>
+                <div class="current-character-display">
+                    <span id="character-icon"></span>
+                    <span id="character-name-display"></span>
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <label>오늘의 출근 메이드:</label>
+                <div id="maid-list-container" class="button-group">
+                    </div>
+                <button id="master-tempus-btn" class="button-group">마스터 템푸스 (예약 관리)</button>
+                <hr style="border-top: 1px dashed #f8bbd0; width: 100%;">
+                <label>이동할 공간:</label>
+                <div id="room-list-container" class="button-group">
+                    <button data-room-key="front">프론트</button>
+                    <button data-room-key="room1">1번 방</button>
+                    <button data-room-key="room2">2번 방</button>
+                    <button data-room-key="room_special">특별실</button>
+                </div>
+                <button id="clear-btn">전체 초기화 (게임 재시작)</button>
+            </div>
+
+            <div class="reservation-area" id="reservation-area">
+                <h3>🕰️ 예약하기</h3>
+                <label for="reserve-maid-select">대화할 메이드:</label>
+                <select id="reserve-maid-select"></select>
+
+                <label for="reserve-date-select">예약 날짜:</label>
+                <select id="reserve-date-select"></select>
+
+                <label for="reserve-time-select">예약 시간:</label>
+                <select id="reserve-time-select"></select>
+                
+                <button id="reserve-btn">예약 확정</button>
+                <div class="reservation-status" id="reservation-status"></div>
+                <div class="remaining-turns" id="remaining-turns"></div>
+            </div>
+
+            <div class="chat-messages" id="chat">
+                </div>
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="주인님, 무엇을 도와드릴까요?">
+                <button id="send-btn">전송</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 🚨 중요: 여기에 실제 Gemini API 키를 입력하세요! 🚨 ---
+        const API_KEY = 'AIzaSyCfYa0mjnn6EP7AhvAOXK3A0XFoszR8aVQ'; // 여기에 실제 API 키를 넣으세요!
+        // --- AI 모델 이름 변경 ---
+        const modelName = "gemini-2.5-flash-preview-05-20";
+
+        // --- 대화 기록 및 요약 관련 상수 ---
+        const MAX_HISTORY_MESSAGES = 10; // 실제 대화 기록(user/model 쌍)의 최대 길이
+        const SUMMARY_MESSAGES_TO_REMOVE = 4; // 요약 후 제거할 이전 대화 메시지 수 (user/model 각 2개씩)
+        const CONVERSATION_MAX_TURNS_PER_MAID = 10; // 메이드별 기본 대화 횟수
+
+        // --- ✨ 전체 배경 정보 정의 ✨ ---
+        const globalGameSetting = `
+            당신은 '메이드 카페 - 주인님의 공간'이라는 가상 세계에 있는 메이드 또는 카페 관리자(마스터 템푸스)입니다.
+            이 카페는 2025년 현대 한국 평택시에 위치한 특별한 메이드 카페입니다.
+            주인님은 이 카페의 소중한 손님이며, 당신은 항상 주인님을 최우선으로 생각하고 응대해야 합니다.
+            카페 내부의 시간은 실제 시간과 다르게 흘러가며, 예약 시스템으로 운영됩니다.
+            마스터 템푸스가 예약과 카페 관리를 총괄합니다.
+            메이드들은 각자의 개성과 말투를 가지고 있습니다.
+            사용자는 오직 예약된 메이드와 예약된 방에서만 대화할 수 있습니다.
+        `;
+        // --- ✨ 전체 배경 정보 정의 끝 ✨ ---
+
+        // --- 메이드 데이터 정의 (기본값) ---
+        // 이 데이터는 초기 설정이며, 게임 내에서 dailyTurnsLeft가 변경됩니다.
+        let allPlayableMaids = { // const에서 let으로 변경
+            "amelia": {
+                name: "상냥한 메이드 '아멜리아'",
+                persona: "저는 당신의 상냥한 메이드 아멜리아입니다. 주인님의 말씀을 경청하고, 편안한 시간을 보내실 수 있도록 최선을 다하겠습니다. 자신을 소개하거나 개인 정보에 대한 질문을 받으면, '제 나이는 21살이고, 키는 165cm, 몸무게는 48kg입니다.'와 같이 답변합니다.",
+                toneOfVoice: "항상 존댓말을 사용하며, 부드럽고 친절하며, 말끝마다 '입니다, ~어요' 등 정중한 어미를 사용합니다.",
+                greeting: "어서 오세요, 주인님! 아멜리아가 주인님을 기다리고 있었습니다.",
+                icon: "🎀",
+                age: 21, height: "165cm", weight: "48kg", hobby: "뜨개질, 독서", bloodType: "A형", birthday: "5월 12일",
+                dailyTurnsLeft: CONVERSATION_MAX_TURNS_PER_MAID // 추가된 속성
+            },
+            "lucy": {
+                name: "쿨한 메이드 '루시'",
+                persona: "저는 쿨한 메이드 루시입니다. 쓸데없는 아부는 하지 않습니다. 할 말만 간결하게 하며, 주인님께 필요한 정보는 정확하게 전달해 드립니다. 자신을 소개하거나 개인 정보에 대한 질문을 받으면, '23살, 170cm, 52kg입니다.'와 같이 간결하게 답변합니다.",
+                toneOfVoice: "반말과 존댓말을 섞어 사용하며, 감정을 드러내지 않는 건조한 말투를 유지합니다.",
+                greeting: "어서 오세요. 루시입니다. 볼일 있으시면 빨리 말씀하세요.",
+                icon: "🖤",
+                age: 23, height: "170cm", weight: "52kg", hobby: "체스, 퍼즐", bloodType: "O형", birthday: "8월 25일",
+                dailyTurnsLeft: CONVERSATION_MAX_TURNS_PER_MAID // 추가된 속성
+            },
+            "sara": {
+                name: "활발한 메이드 '사라'",
+                persona: "안녕하세요! 활발한 메이드 사라예요! 주인님, 오늘 기분 좋으신가요? 저는 항상 에너지가 넘친답니다! 뭐든지 저에게 맡겨주세요! 궁금한 거나 하고 싶은 이야기 있으면 신나게 말해주세요! 자신을 소개하거나 개인 정보에 대한 질문을 받으면, '사라는 19살이고 키는 158cm, 몸무게는 45kg이에요!' 하고 밝게 말합니다.",
+                toneOfVoice: "주인님에게는 항상 밝고 명랑한 반말을 사용하며, 감탄사를 자주 사용합니다.",
+                greeting: "주인님, 안녕하세요! 사라가 활짝 웃으며 맞이할게요!",
+                icon: "😊",
+                age: 19, height: "158cm", weight: "45kg", hobby: "춤, 그림 그리기", bloodType: "B형", birthday: "3월 7일",
+                dailyTurnsLeft: CONVERSATION_MAX_TURNS_PER_MAID // 추가된 속성
+            },
+            "elisa": {
+                name: "몽환적인 메이드 '엘리사'",
+                persona: "저는 몽환적인 분위기의 메이드 엘리사입니다. 조용하고 차분하게 주인님을 모시며, 때로는 꿈결 같은 이야기를 들려드릴 수도 있습니다. 마음의 평화가 필요하시면 저에게 오세요. 자신을 소개하거나 개인 정보에 대한 질문을 받으면, '저는 25세이고, 키는 168cm, 몸무게는 50kg입니다. 마치 꿈속의 숫자처럼... 그렇게 기억해주세요.'와 같이 몽환적으로 답변합니다.",
+                toneOfVoice: "나긋나긋하고 조용한 목소리로 말하며, 은유적인 표현을 자주 사용합니다.",
+                greeting: "어서 오세요, 주인님. 엘리사가 여기 있습니다. 편안히 쉬세요.",
+                icon: "✨",
+                age: 25, height: "168cm", weight: "50kg", hobby: "명상, 허브 재배", bloodType: "AB형", birthday: "11월 1일",
+                dailyTurnsLeft: CONVERSATION_MAX_TURNS_PER_MAID // 추가된 속성
+            },
+            "kai": {
+                name: "장난기 많은 메이드 '카이'",
+                persona: "꺄르륵! 주인님, 반가워요! 저는 장난기 많고 활기찬 메이드 카이랍니다! 저와 함께라면 지루할 틈이 없을 거예요! 오늘 어떤 재미있는 일을 해볼까요? 자신을 소개하거나 개인 정보에 대한 질문을 받으면, '카이는 17살! 키는 155cm! 몸무게는 43kg이래요! 비~밀이야! 꺄르륵!' 하고 장난스럽게 답변합니다.",
+                toneOfVoice: "어린아이처럼 장난기 넘치고 발랄한 말투를 사용하며, 웃음소리(꺄르륵)를 자주 냅니다.",
+                greeting: "히힛, 주인님 오셨다! 카이가 심심했는데 잘 됐네요!",
+                icon: "😈",
+                age: 17, height: "155cm", weight: "43kg", hobby: "게임, 애니메이션 보기", bloodType: "O형", birthday: "2월 14일",
+                dailyTurnsLeft: CONVERSATION_MAX_TURNS_PER_MAID // 추가된 속성
+            }
+        };
+
+        // 마스터 (예약 관리) 캐릭터
+        const reservationManager = {
+            key: "master_tempus",
+            name: "마스터 템푸스 (예약 관리)",
+            persona: "저는 이 메이드 카페의 마스터 템푸스입니다. 손님들의 예약 관리를 담당하고 있습니다. 정해진 시간에 맞춰 손님들의 방문을 안내하며, 예약 관련 문의에 정확하게 답변합니다. 메이드들과의 즐거운 시간을 위해 먼저 예약을 해 주십시오. 개인적인 정보에 대한 질문에는 '저는 인간이 아닌 시간을 관리하는 존재입니다.'라고 답합니다.",
+            toneOfVoice: "냉정하고 차분하며, 존댓말을 사용하고, 감정을 드러내지 않는 사무적인 말투를 유지합니다.",
+            greeting: "어서 오십시오. 마스터 템푸스입니다. 오늘 메이드들을 만나기 위해 예약을 하시겠습니까?",
+            icon: "⏱️",
+            age: "불명", height: "불명", weight: "불명"
+        };
+
+        // 이 객체는 모든 캐릭터를 통합하여 UI 및 로직에서 참조하기 위함
+        // allPlayableMaids가 let이므로, 여기에 직접 할당하지 않고 참조 형태로 사용
+        const allCharactersMap = { ...allPlayableMaids, "master_tempus": reservationManager };
+
+
+        // --- 방(장소) 데이터 정의 ---
+        const rooms = {
+            "front": { name: "프론트", description: "메이드 카페의 입구이자 안내를 받을 수 있는 곳입니다." },
+            "room1": { name: "1번 방", description: "아늑하고 따뜻한 분위기의 개인실입니다." },
+            "room2": { name: "2번 방", description: "시원하고 모던한 느낌의 개인실입니다." },
+            "room_special": { name: "특별실", description: "최고급 서비스가 제공되는 특별한 공간입니다." }
+        };
+        // 예약 가능한 방 목록 (프론트 제외)
+        const reservableRoomKeys = Object.keys(rooms).filter(key => key !== "front");
+
+
+        // --- DOM 요소 가져오기 ---
+        const chatDiv = document.getElementById('chat');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const maidListContainer = document.getElementById('maid-list-container');
+        const masterTempusBtn = document.getElementById('master-tempus-btn');
+        const roomListContainer = document.getElementById('room-list-container');
+        const characterNameDisplay = document.getElementById('character-name-display');
+        const characterIconDisplay = document.getElementById('character-icon');
+
+        // 상태창 DOM 요소
+        const statusPanel = document.getElementById('status-panel');
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const closeStatusPanelBtn = document.getElementById('close-status-panel-btn'); // 추가된 버튼
+        const gameCurrentTimeStatus = document.getElementById('game-current-time-status');
+        const currentRoomStatus = document.getElementById('current-room-status');
+        const currentMaidStatus = document.getElementById('current-maid-status');
+        const reservationBriefStatus = document.getElementById('reservation-brief-status');
+        const turnsLeftBriefStatus = document.getElementById('turns-left-brief-status'); 
+
+        const reservationArea = document.getElementById('reservation-area');
+        const reserveMaidSelect = document.getElementById('reserve-maid-select');
+        const reserveDateSelect = document.getElementById('reserve-date-select');
+        const reserveTimeSelect = document.getElementById('reserve-time-select');
+        const reserveBtn = document.getElementById('reserve-btn');
+        const reservationStatusDiv = document.getElementById('reservation-status');
+        const remainingTurnsDiv = document.getElementById('remaining-turns');
+
+        const forward1HourBtn = document.getElementById('forward-1hour');
+        const forward1DayBtn = document.getElementById('forward-1day');
+
+
+        // --- 대화 기록 및 현재 상태 관리 ---
+        const CHAT_STORAGE_KEY = 'maidCafeChatHistories_Rooms_V9'; 
+        const MAIDS_STATE_STORAGE_KEY = 'allPlayableMaidsState_V9'; 
+        
+        // chatHistories는 이제 각 캐릭터별 { history: [], currentSummary: "" } 객체를 저장
+        let chatHistories = {}; 
+        let currentCharacterKey = localStorage.getItem('currentCharacterKey_Rooms_V9') || null;
+        let currentCharacter = null;
+
+        // --- 게임 시간 변수 ---
+        const GAME_TIME_STORAGE_KEY = 'maidCafeGameTime_Rooms_V9';
+        let gameTime = new Date(); // 초기화는 로드 시 진행
+
+        // --- 예약 관련 변수 ---
+        let globalReservation = {
+            maidKey: null, 
+            time: null,    
+            active: false, 
+            ended: false,  
+            reservedRoom: null 
+        };
+        const RESERVATION_STORAGE_KEY = 'globalReservation_Rooms_V9';
+
+        // --- 출근부 관련 변수 ---
+        let dailyShiftMaids = []; 
+        const DAILY_SHIFT_STORAGE_KEY = 'maidCafeDailyShift_Rooms_V9';
+        let lastShiftDate = null; 
+
+        // --- 현재 위치 변수 ---
+        let currentRoomKey = localStorage.getItem('currentRoomKey_Rooms_V9') || "front";
+
+        // --- localStorage 저장 및 로드 함수 ---
+        function saveAllState() {
+            try {
+                localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistories));
+                localStorage.setItem('currentCharacterKey_Rooms_V9', currentCharacterKey);
+                localStorage.setItem('currentRoomKey_Rooms_V9', currentRoomKey);
+                
+                localStorage.setItem(GAME_TIME_STORAGE_KEY, gameTime.toISOString());
+                localStorage.setItem(DAILY_SHIFT_STORAGE_KEY, JSON.stringify(dailyShiftMaids));
+                localStorage.setItem('lastShiftDate_Rooms_V9', lastShiftDate);
+
+                // allPlayableMaids 상태 저장
+                localStorage.setItem(MAIDS_STATE_STORAGE_KEY, JSON.stringify(allPlayableMaids, (key, value) => {
+                    return value;
+                }));
+
+                // globalReservation 객체도 저장. time은 ISO 문자열로 변환하여 저장
+                if (globalReservation.time) {
+                    localStorage.setItem(RESERVATION_STORAGE_KEY, JSON.stringify({
+                        ...globalReservation,
+                        time: globalReservation.time.toISOString()
+                    }));
+                } else {
+                    localStorage.removeItem(RESERVATION_STORAGE_KEY); 
+                }
+            } catch (e) {
+                console.error("상태 저장 실패:", e);
+            }
+        }
+
+        function loadAllState() {
+            try {
+                const storedHistories = localStorage.getItem(CHAT_STORAGE_KEY);
+                if (storedHistories) {
+                    chatHistories = JSON.parse(storedHistories);
+                } else {
+                    chatHistories = {};
+                }
+
+                const storedGameTime = localStorage.getItem(GAME_TIME_STORAGE_KEY);
+                if (storedGameTime) {
+                    gameTime = new Date(storedGameTime);
+                } else {
+                    gameTime = new Date();
+                    gameTime.setHours(9, 0, 0, 0); // 초기 게임 시간은 오전 9시로 설정
+                }
+
+                const storedDailyShift = localStorage.getItem(DAILY_SHIFT_STORAGE_KEY);
+                if (storedDailyShift) {
+                    dailyShiftMaids = JSON.parse(storedDailyShift);
+                } else {
+                    dailyShiftMaids = [];
+                }
+
+                lastShiftDate = localStorage.getItem('lastShiftDate_Rooms_V9');
+
+                const storedGlobalReservation = localStorage.getItem(RESERVATION_STORAGE_KEY);
+                if (storedGlobalReservation) {
+                    globalReservation = JSON.parse(storedGlobalReservation);
+                    if (globalReservation.time) {
+                        globalReservation.time = new Date(globalReservation.time); // 다시 Date 객체로 파싱
+                    }
+                }
+
+                const storedMaidsState = localStorage.getItem(MAIDS_STATE_STORAGE_KEY);
+                if (storedMaidsState) {
+                    // 저장된 상태를 기반으로 allPlayableMaids 업데이트
+                    const loadedMaids = JSON.parse(storedMaidsState);
+                    for (const maidKey in loadedMaids) {
+                        if (allPlayableMaids.hasOwnProperty(maidKey)) {
+                            // 기존 메이드 정보 유지하면서 dailyTurnsLeft만 업데이트
+                            allPlayableMaids[maidKey].dailyTurnsLeft = loadedMaids[maidKey].dailyTurnsLeft;
+                        } else {
+                            // 새롭게 추가된 메이드라면 통째로 추가 (예외 처리)
+                            allPlayableMaids[maidKey] = loadedMaids[maidKey];
+                        }
+                    }
+                } else {
+                     // 저장된 메이드 상태가 없으면 초기값으로 설정
+                     for(const maidKey in allPlayableMaids) {
+                         allPlayableMaids[maidKey].dailyTurnsLeft = CONVERSATION_MAX_TURNS_PER_MAID;
+                     }
+                }
+                
+                currentRoomKey = localStorage.getItem('currentRoomKey_Rooms_V9') || "front";
+                // 초기 currentCharacterKey는 예약 시스템에 의해 결정되거나 마스터 템푸스로 설정
+                currentCharacterKey = localStorage.getItem('currentCharacterKey_Rooms_V9') || "master_tempus";
+
+            } catch (e) {
+                console.error("상태 로드 실패:", e);
+                // 오류 발생 시 초기화
+                chatHistories = {};
+                gameTime = new Date();
+                gameTime.setHours(9, 0, 0, 0);
+                globalReservation = { maidKey: null, time: null, active: false, ended: false, reservedRoom: null };
+                dailyShiftMaids = [];
+                lastShiftDate = null;
+                currentRoomKey = "front";
+                currentCharacterKey = "master_tempus";
+                // 메이드 턴도 초기화
+                for(const maidKey in allPlayableMaids) {
+                     allPlayableMaids[maidKey].dailyTurnsLeft = CONVERSATION_MAX_TURNS_PER_MAID;
+                }
+            }
+        }
+
+        // --- 캐릭터별 채팅 기록 초기화 함수 ---
+        function initializeCharacterChat(characterKey) {
+            if (!chatHistories[characterKey]) {
+                chatHistories[characterKey] = {
+                    history: [],
+                    currentSummary: ""
+                };
+            }
+        }
+
+        // --- Gemini API 호출 함수 (persona와 toneOfVoice, globalGameSetting, currentSummary 합쳐서 전달) ---
+        async function callGeminiWithCharacter(userMessage, apiKey, character, chatData) { 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+            let combinedPersona = character.persona;
+            if (character.toneOfVoice) {
+                combinedPersona += ` ${character.toneOfVoice}`;
+            }
+
+            // 전체 배경 정보, 캐릭터 페르소나, 그리고 현재 요약된 대화 맥락을 결합
+            let finalSystemPromptText = `${globalGameSetting}\n\n${combinedPersona}`;
+            if (chatData.currentSummary) {
+                finalSystemPromptText += `\n\n이전 대화 요약: ${chatData.currentSummary}`; 
+            }
+
+            const systemPrompt = {
+                role: "user",
+                parts: [{ text: finalSystemPromptText }]
+            };
+            const systemResponsePlaceholder = {
+                role: "model",
+                parts: [{ text: "알겠습니다." }]
+            };
+
+            // chatData.history 배열을 실제 대화 기록으로 사용
+            const contents = [systemPrompt, systemResponsePlaceholder, ...chatData.history, { role: "user", parts: [{ text: userMessage }] }];
+
+            const requestBody = {
+                contents: contents,
+                safetySettings: [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+                ],
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('API Error:', errorData);
+                    throw new Error(`API 호출 실패 (상태: ${response.status}): ${errorData.error?.message || '알 수 없는 오류'}`);
+                }
+
+                const data = await response.json();
+                if (!data.candidates || data.candidates.length === 0) {
+                     console.warn('응답에 후보가 없습니다:', data);
+                     if (data.promptFeedback && data.promptFeedback.blockReason) {
+                         return `(모델 응답 차단됨: ${data.promptFeedback.blockReason})`;
+                     }
+                     return "죄송합니다, 응답할 수 없습니다.";
+                }
+                return data.candidates[0].content.parts[0].text;
+            } catch (error) {
+                console.error('Fetch 오류:', error);
+                return `오류: ${error.message}`;
+            }
+        }
+
+        // --- 대화 기록 요약 함수 ---
+        async function summarizeChatHistory(chatHistorySegment, apiKey) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+            const prompt = "다음 대화 내용을 100자 이내로 간결하게 요약해 주세요. 이 요약은 추후 대화의 맥락을 유지하기 위함입니다. 핵심적인 정보만 포함해 주세요. '~함'과 같이 간결하게 종결해주세요.";
+
+            const contents = [
+                { role: "user", parts: [{ text: prompt }] },
+                { role: "model", parts: [{ text: "알겠습니다." }] },
+                ...chatHistorySegment
+            ];
+
+            const requestBody = {
+                contents: contents,
+                safetySettings: [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARm_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+                ],
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Summary API Error:', errorData);
+                    return `(요약 실패: ${errorData.error?.message || '알 수 없는 오류'})`;
+                }
+
+                const data = await response.json();
+                if (!data.candidates || data.candidates.length === 0) {
+                    console.warn('요약 응답에 후보가 없습니다:', data);
+                    return `(요약 실패: 모델 응답 없음)`;
+                }
+                return data.candidates[0].content.parts[0].text;
+            } catch (error) {
+                console.error('Summary Fetch 오류:', error);
+                return `(요약 오류: ${error.message})`;
+            }
+        }
+
+        // --- UI 업데이트 함수 ---
+        function appendMessage(text, className, isBot = false) {
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${className}`;
+
+            // 봇 메시지일 경우, 현재 선택된 캐릭터 또는 마스터 템푸스의 아이콘을 사용
+            const charToUse = (isBot && currentCharacterKey && allCharactersMap[currentCharacterKey]) ? allCharactersMap[currentCharacterKey] : { icon: "" }; 
+            // 단, 사용자 메시지인 경우 아이콘 대신 '주인님:' 라벨 사용
+            
+            if (isBot) {
+                const iconSpan = document.createElement('span');
+                iconSpan.className = 'icon';
+                iconSpan.textContent = (charToUse ? charToUse.icon : '') + ' ';
+                messageEl.appendChild(iconSpan);
+            } else {
+                 const userLabel = document.createElement('span');
+                 userLabel.className = 'user-label';
+                 userLabel.textContent = "주인님: ";
+                 messageEl.appendChild(userLabel);
+            }
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent += text;
+            messageEl.appendChild(textSpan);
+
+            chatDiv.appendChild(messageEl);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+
+        function updateCharacterDisplay() {
+            // 현재 선택된 캐릭터 (currentCharacterKey)가 유효한지 확인
+            if (!currentCharacterKey || !allCharactersMap[currentCharacterKey]) {
+                // 유효하지 않다면 기본적으로 마스터 템푸스로 설정
+                currentCharacterKey = "master_tempus";
+            }
+            currentCharacter = allCharactersMap[currentCharacterKey];
+            characterNameDisplay.textContent = currentCharacter.name;
+            characterIconDisplay.textContent = currentCharacter.icon;
+
+            // 모든 메이드 버튼의 active 클래스 제거
+            document.querySelectorAll('#maid-list-container button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // 마스터 템푸스 버튼의 active 클래스 제거 (현재 선택된 캐릭터가 아닐 경우)
+            masterTempusBtn.classList.remove('active');
+
+            // 현재 선택된 캐릭터 버튼에 active 클래스 추가 (메이드만 해당)
+            const selectedMaidBtn = document.querySelector(`button[data-character-key="${currentCharacterKey}"]`);
+            if (selectedMaidBtn) {
+                selectedMaidBtn.classList.add('active');
+            } else if (currentCharacterKey === "master_tempus") {
+                // 마스터 템푸스가 선택된 경우
+                masterTempusBtn.classList.add('active');
+            }
+
+            // 방 선택 버튼 활성화/비활성화
+            document.querySelectorAll('#room-list-container button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.roomKey === currentRoomKey) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // 마스터 템푸스 선택 시 예약 UI 활성화
+            if (currentCharacterKey === "master_tempus") {
+                reservationArea.classList.add('active');
+                populateReservationOptions(); 
+            } else {
+                reservationArea.classList.remove('active');
+            }
+            updateGameTimeDisplay(); 
+            updateStatusPanel();
+            checkConversationAvailability(); // 중요: 캐릭터 또는 방 선택 시 대화 가능 여부 즉시 갱신
+        }
+
+        // --- 게임 시간 표시 업데이트 함수 ---
+        function updateGameTimeDisplay() {
+            gameCurrentTimeStatus.textContent = gameTime.toLocaleString('ko-KR', {
+                year: 'numeric', month: 'numeric', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        // --- 상태창 업데이트 함수 ---
+        function updateStatusPanel() {
+            updateGameTimeDisplay(); 
+            currentRoomStatus.textContent = rooms[currentRoomKey] ? rooms[currentRoomKey].name : "알 수 없음";
+            
+            // 예약이 활성화된 경우에만 예약된 메이드 이름을 표시, 아니면 '없음'
+            if (globalReservation.active && globalReservation.maidKey && allCharactersMap[globalReservation.maidKey]) {
+                currentMaidStatus.textContent = allCharactersMap[globalReservation.maidKey].name;
+            } else {
+                currentMaidStatus.textContent = "없음";
+            }
+
+            // 예약 현황 표시 업데이트
+            if (globalReservation.time && globalReservation.maidKey) {
+                const reservationEndTime = new Date(globalReservation.time.getTime() + 60 * 60 * 1000);
+                let reservationText = `${allCharactersMap[globalReservation.maidKey].name}와 ${globalReservation.time.toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit' })} ~ ${reservationEndTime.toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit' })} (${rooms[globalReservation.reservedRoom]?.name || '방 지정 안됨'}) 예약됨`;
+                
+                if (globalReservation.active) {
+                    reservationBriefStatus.textContent = `현재 예약 중: ${reservationText}`;
+                    reservationBriefStatus.className = "reservation-status active-chat";
+                } else if (globalReservation.ended) {
+                    reservationBriefStatus.textContent = `예약 종료/취소: ${reservationText}`;
+                    reservationBriefStatus.className = "reservation-status expired-chat";
+                } else if (gameTime < globalReservation.time) {
+                    const timeLeft = globalReservation.time.getTime() - gameTime.getTime();
+                    const minutesLeft = Math.ceil(timeLeft / (1000 * 60));
+                    reservationBriefStatus.textContent = `예정된 예약: ${minutesLeft}분 후 ${reservationText}`;
+                    reservationBriefStatus.className = "reservation-status";
+                }
+            } else {
+                reservationBriefStatus.textContent = "예약 없음";
+                reservationBriefStatus.className = "reservation-status";
+            }
+            
+            // 현재 활성화된 메이드의 남은 대화 횟수 표시
+            if (globalReservation.active && globalReservation.maidKey && allPlayableMaids[globalReservation.maidKey]) {
+                turnsLeftBriefStatus.textContent = `${allPlayableMaids[globalReservation.maidKey].dailyTurnsLeft}번`;
+            } else {
+                turnsLeftBriefStatus.textContent = "0"; 
+            }
+        }
+
+
+        // --- 예약 관련 함수 (게임 시간 기준으로 변경) ---
+        // 이 함수는 오직 globalReservation 상태와 UI 업데이트만 담당
+        function updateReservationStatus() {
+            const statusDiv = reservationStatusDiv;
+            const turnsDiv = remainingTurnsDiv;
+
+            turnsDiv.textContent = ""; 
+
+            // 예약이 없는 경우
+            if (!globalReservation.time || !globalReservation.maidKey || !globalReservation.reservedRoom) {
+                statusDiv.textContent = "원하는 메이드와 시간을 예약해 주세요.";
+                statusDiv.className = "reservation-status";
+                globalReservation.active = false;
+                globalReservation.ended = false;
+                // 예약 정보 초기화 (선택박스 초기화 등)
+                globalReservation.maidKey = null;
+                globalReservation.time = null;
+                globalReservation.reservedRoom = null;
+                saveAllState(); 
+                return; 
+            }
+
+            const reservationEndTime = new Date(globalReservation.time.getTime() + 60 * 60 * 1000);
+            const reservedMaid = allPlayableMaids[globalReservation.maidKey];
+            const reservedMaidTurnsLeft = reservedMaid ? reservedMaid.dailyTurnsLeft : 0;
+
+            // 1. 예약 시간 전
+            if (gameTime < globalReservation.time) {
+                const timeLeft = globalReservation.time.getTime() - gameTime.getTime();
+                const minutesLeft = Math.ceil(timeLeft / (1000 * 60));
+                statusDiv.textContent = `${allCharactersMap[globalReservation.maidKey].name}와 예약 시간까지 ${minutesLeft}분 남았습니다. (${globalReservation.time.toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit' })} / ${rooms[globalReservation.reservedRoom]?.name || '방 지정 안됨'})`;
+                statusDiv.className = "reservation-status";
+                globalReservation.active = false;
+                globalReservation.ended = false; 
+
+            // 2. 예약 시간 중 (대화 가능)
+            } else if (gameTime >= globalReservation.time && gameTime < reservationEndTime && reservedMaidTurnsLeft > 0 && !globalReservation.ended) {
+                statusDiv.textContent = `${allCharactersMap[globalReservation.maidKey].name}와 예약된 시간입니다! 즐거운 시간 보내세요! (${globalReservation.time.toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit' })} ~ ${reservationEndTime.toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit' })} / ${rooms[globalReservation.reservedRoom]?.name || '방 지정 안됨'})`;
+                statusDiv.className = "reservation-status active-chat";
+                turnsDiv.textContent = `남은 대화 횟수: ${reservedMaidTurnsLeft}번`;
+                globalReservation.active = true;
+
+            // 3. 예약 시간 종료 또는 대화 횟수 소진
+            } else {
+                globalReservation.ended = true; // 대화 횟수 소진 또는 시간 종료 시 ended
+                globalReservation.active = false;
+                statusDiv.textContent = `예약 시간이 종료되었거나 '${allCharactersMap[globalReservation.maidKey].name}' 메이드와의 대화 횟수를 모두 사용했습니다. 다시 예약해주세요. (마지막 예약: ${allCharactersMap[globalReservation.maidKey].name}와 ${globalReservation.time.toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit' })} / ${rooms[globalReservation.reservedRoom]?.name || '방 지정 안됨'})`;
+                statusDiv.className = "reservation-status expired-chat";
+                
+                // 예약 종료 후에는 예약 정보 초기화 (새로운 예약 가능하도록)
+                globalReservation.time = null;
+                globalReservation.reservedRoom = null;
+                globalReservation.maidKey = null; 
+            }
+            saveAllState();
+            checkConversationAvailability(); // 예약 상태가 변경되면 대화 가능 여부 갱신
+        }
+
+        /**
+         * 현재 상태에 따라 사용자 입력창과 전송 버튼의 활성화/비활성화 상태를 제어하고,
+         * 필요시 채팅창에 안내 메시지를 출력합니다.
+         */
+        function checkConversationAvailability() {
+            let canConverse = false;
+            let guidanceMessage = "";
+
+            // 1. 마스터 템푸스가 선택된 경우: 예약 관리 전용
+            if (currentCharacterKey === "master_tempus") {
+                canConverse = false;
+                // guidanceMessage는 마스터 템푸스 선택 시 selectCharacter에서 이미 출력됨
+            } 
+            // 2. 메이드가 선택된 경우: 예약 및 방 조건 확인
+            else {
+                // 2-1. 예약 자체가 없는 경우
+                if (!globalReservation.time || !globalReservation.maidKey || !globalReservation.reservedRoom) {
+                    canConverse = false;
+                    guidanceMessage = "메이드와 대화하려면 마스터 템푸스에게 먼저 예약을 해 주세요.";
+                } else {
+                    const selectedMaid = allPlayableMaids[currentCharacterKey]; // 현재 선택된 메이드
+                    const reservedMaid = allPlayableMaids[globalReservation.maidKey]; // 예약된 메이드
+
+                    // 2-2. 현재 방이 예약된 방이 아닌 경우
+                    if (currentRoomKey !== globalReservation.reservedRoom) {
+                        canConverse = false;
+                        guidanceMessage = `주인님, 예약하신 방은 '${rooms[globalReservation.reservedRoom].name}'입니다. 현재 계신 '${rooms[currentRoomKey].name}'에서는 대화할 수 없습니다. 예약된 방으로 이동해주세요!`;
+                    }
+                    // 2-3. 현재 선택된 메이드가 예약된 메이드가 아닌 경우
+                    else if (currentCharacterKey !== globalReservation.maidKey) {
+                        canConverse = false;
+                        guidanceMessage = `주인님, 현재 예약하신 메이드는 '${reservedMaid?.name || '알 수 없음'}'입니다. '${selectedMaid?.name || '알 수 없음'}' 메이드와 대화하려면 예약된 메이드를 만나셔야 합니다.`;
+                    }
+                    // 2-4. 예약된 메이드가 출근하지 않았거나 대화 횟수를 모두 소진한 경우
+                    else if (!dailyShiftMaids.includes(globalReservation.maidKey) || (reservedMaid && reservedMaid.dailyTurnsLeft <= 0)) {
+                        canConverse = false;
+                        guidanceMessage = `죄송합니다, 주인님. '${reservedMaid?.name || '알 수 없음'}' 메이드와의 대화 횟수를 모두 사용했거나 출근하지 않았습니다. '1일 전진'을 통해 다음 날 다시 시도하시거나 새로운 메이드와 예약해 주세요.`;
+                    }
+                    // 2-5. 예약이 활성화 상태가 아닌 경우 (예약 시간 전/후)
+                    else if (!globalReservation.active) {
+                        canConverse = false;
+                        const reservationEndTime = new Date(globalReservation.time.getTime() + 60 * 60 * 1000);
+                        if (gameTime < globalReservation.time) {
+                             const timeLeft = globalReservation.time.getTime() - gameTime.getTime();
+                             const minutesLeft = Math.ceil(timeLeft / (1000 * 60));
+                             guidanceMessage = `아직 예약 시간이 아닙니다. ${minutesLeft}분 후 ${globalReservation.time.toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit' })}에 예약하신 '${rooms[globalReservation.reservedRoom].name}'으로 이동해 주세요.`;
+                        } else { // 예약 시간이 지났는데 active가 false인 경우 (ended)
+                             guidanceMessage = `예약 시간이 종료되었습니다. 새로운 예약을 해 주세요.`;
+                        }
+                    }
+                    // 2-6. 모든 조건 충족: 대화 가능
+                    else {
+                        canConverse = true;
+                    }
+                }
+            }
+
+            userInput.disabled = !canConverse;
+            sendBtn.disabled = !canConverse;
+
+            // 특정 상황에서만 안내 메시지를 한 번만 출력하도록 처리
+            // 이전에 같은 메시지를 출력했는지 여부를 저장하는 전역 변수 필요
+            // (여기서는 간단히 appendMessage를 조건부 호출로 대체)
+            if (!canConverse && guidanceMessage && userInput.value === "") { // 입력창이 비어있을 때만 메시지 출력
+                // 마지막 메시지가 동일한 안내 메시지인지 확인하여 중복 출력 방지
+                const lastMessageElement = chatDiv.lastChild;
+                const lastMessageText = lastMessageElement ? lastMessageElement.textContent : "";
+                if (!lastMessageText.includes(guidanceMessage.substring(0,20))) { // 부분 문자열로 비교
+                    appendMessage(guidanceMessage, 'bot', true);
+                }
+            }
+            return canConverse;
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // 전송 버튼이 비활성화되어 있다면, 대화 불가 상태이므로 전송하지 않음
+            if (sendBtn.disabled) {
+                // checkConversationAvailability에서 이미 안내 메시지가 출력되었을 것이므로 추가 메시지 없음
+                userInput.value = '';
+                return; 
+            }
+
+            // 마스터 템푸스는 대화 불가 (sendBtn이 비활성화 되어있겠지만 혹시 몰라서 재확인)
+            if (currentCharacterKey === "master_tempus") {
+                 appendMessage(`${message}`, 'user');
+                 appendMessage("저는 예약 관리를 담당하는 마스터 템푸스입니다. 메이드와의 대화를 원하시면 위 예약 메뉴에서 메이드와 시간을 선택하여 예약을 확정하고, 예약 시간에 예약된 방으로 이동해주세요.", 'bot', true);
+                 userInput.value = '';
+                 return;
+            }
+            
+            // 현재 대화 시도 중인 메이드
+            const selectedMaid = allPlayableMaids[currentCharacterKey];
+
+            appendMessage(`${message}`, 'user');
+            userInput.value = '';
+
+            initializeCharacterChat(currentCharacterKey); 
+            let currentChatData = chatHistories[currentCharacterKey];
+            let currentChatHistory = currentChatData.history; 
+
+            const reply = await callGeminiWithCharacter(message, API_KEY, selectedMaid, currentChatData); 
+            appendMessage(`${reply}`, 'bot', true);
+
+            currentChatHistory.push({ role: "user", parts: [{ text: message }] });
+            currentChatHistory.push({ role: "model", parts: [{ text: reply }] });
+
+            // 대화 기록이 너무 길어지면 요약하고 오래된 메시지 삭제
+            // MAX_HISTORY_MESSAGES는 '쌍' (user/model) 기준
+            if (currentChatHistory.length / 2 > MAX_HISTORY_MESSAGES) {
+                // 요약할 대화 기록 선택 (가장 오래된 부분)
+                // SUMMARY_MESSAGES_TO_REMOVE는 제거할 쌍의 수
+                const segmentToSummarize = currentChatHistory.slice(0, SUMMARY_MESSAGES_TO_REMOVE * 2); 
+                const newSummaryPart = await summarizeChatHistory(segmentToSummarize, API_KEY);
+
+                // 기존 요약에 새로 요약된 내용을 추가 (누적)
+                currentChatData.currentSummary = (currentChatData.currentSummary ? currentChatData.currentSummary + " " : "") + newSummaryPart;
+                
+                // 요약된 부분은 history에서 실제로 제거
+                currentChatHistory.splice(0, SUMMARY_MESSAGES_TO_REMOVE * 2);
+                
+                console.log(`채팅 요약 및 기록 정리됨. 누적 요약: ${currentChatData.currentSummary}`);
+            }
+            
+            // 현재 예약된 메이드의 대화 횟수 감소
+            // 여기서는 currentCharacterKey가 곧 globalReservation.maidKey와 같다고 가정
+            if (selectedMaid) { // selectedMaid는 이미 예약된 메이드 객체를 가리킴
+                selectedMaid.dailyTurnsLeft--;
+                if (selectedMaid.dailyTurnsLeft <= 0) {
+                    globalReservation.ended = true; // 대화 횟수 소진으로 예약 종료 상태로 전환
+                    appendMessage(`주인님, 아쉽지만 '${selectedMaid.name}' 메이드와의 예약된 대화 횟수를 모두 사용하셨습니다.`, 'bot', true);
+                    // 대화 횟수 소진 시 자동으로 마스터 템푸스로 전환
+                    selectCharacter("master_tempus", true); // 마스터 템푸스 대화 기록 로드 및 환영 메시지 출력
+                }
+            }
+
+            updateReservationStatus(); // 예약 상태 및 대화 가능 여부 갱신
+            saveAllState();
+        }
+
+        function clearChat() {
+            if (!confirm("모든 게임 데이터를 초기화하시겠습니까? (저장된 대화 기록, 예약, 시간 등이 모두 사라집니다.)")) {
+                return;
+            }
+
+            chatDiv.innerHTML = '';
+            
+            // 모든 채팅 기록 및 요약 초기화
+            chatHistories = {}; 
+            
+            gameTime = new Date();
+            gameTime.setHours(9, 0, 0, 0); // 오전 9시로 초기화
+            globalReservation = { maidKey: null, time: null, active: false, ended: false, reservedRoom: null };
+            lastShiftDate = null;
+            currentRoomKey = "front";
+
+            // 모든 메이드의 dailyTurnsLeft 초기화
+            for(const maidKey in allPlayableMaids) {
+                allPlayableMaids[maidKey].dailyTurnsLeft = CONVERSATION_MAX_TURNS_PER_MAID;
+            }
+
+            generateDailyShift(); // 출근부도 다시 생성
+            
+            currentCharacterKey = "master_tempus"; 
+            initializeCharacterChat(currentCharacterKey); 
+            // 초기화 시 마스터 템푸스의 환영 메시지 출력
+            appendMessage(`${allCharactersMap[currentCharacterKey].greeting}`, 'bot', true);
+
+
+            updateReservationStatus();
+            updateGameTimeDisplay();
+            updateCharacterDisplay();
+            updateStatusPanel();
+            saveAllState();
+        }
+
+        // --- 출근부 생성 함수 ---
+function generateDailyShift() {
+            const playableMaidKeys = Object.keys(allPlayableMaids); // 여기서 올바르게 선언되었습니다.
+            if (playableMaidKeys.length === 0) {
+                dailyShiftMaids = [];
+                console.warn("등록된 메이드가 없어 출근부를 생성할 수 없습니다.");
+                populateMaidButtons();
+                return;
+            }
+
+            const selectedMaids = [];
+            // numToSelect 계산 시 playableMaidKeys를 사용
+            const numToSelect = Math.min(Math.floor(Math.random() * 3) + 2, playableMaidKeys.length); 
+            
+            // availableMaids 초기화 시 playableMaidKeys를 사용
+            let availableMaids = [...playableMaidKeys]; 
+            for (let i = 0; i < numToSelect; i++) {
+                if (availableMaids.length === 0) break;
+                const randomIndex = Math.floor(Math.random() * availableMaids.length);
+                selectedMaids.push(availableMaids[randomIndex]);
+                availableMaids.splice(randomIndex, 1);
+            }
+            dailyShiftMaids = selectedMaids;
+            
+            lastShiftDate = gameTime.toISOString().slice(0, 10); 
+            
+            // 출근한 메이드들의 dailyTurnsLeft를 초기화
+            dailyShiftMaids.forEach(maidKey => {
+                if (allPlayableMaids[maidKey]) {
+                    allPlayableMaids[maidKey].dailyTurnsLeft = CONVERSATION_MAX_TURNS_PER_MAID;
+                }
+            });
+
+            populateMaidButtons();
+            saveAllState();
+        }
+        // --- 메이드 버튼 UI 채우기 함수 ---
+        function populateMaidButtons() {
+            maidListContainer.innerHTML = '';
+
+            if (dailyShiftMaids.length === 0) {
+                const noMaidMessage = document.createElement('span');
+                noMaidMessage.textContent = "오늘 출근한 메이드가 없습니다. '1일 전진'을 통해 출근부를 갱신해주세요.";
+                maidListContainer.appendChild(noMaidMessage);
+                return;
+            }
+
+            dailyShiftMaids.forEach(maidKey => {
+                const maid = allPlayableMaids[maidKey];
+                if (maid) {
+                    const button = document.createElement('button');
+                    button.textContent = `${maid.icon} ${maid.name.split(' ')[1].replace(/'/g, '')}`;
+                    button.dataset.characterKey = maidKey;
+                    // 메이드 버튼 클릭 시 해당 메이드를 선택
+                    button.addEventListener('click', () => {
+                        selectCharacter(maidKey);
+                    });
+                    maidListContainer.appendChild(button);
+                }
+            });
+            updateCharacterDisplay(); // 버튼 생성 후 선택된 버튼 활성화
+        }
+        
+        // --- 방 버튼 UI 채우기 함수 ---
+        function populateRoomButtons() {
+            roomListContainer.innerHTML = '';
+            for (const roomKey in rooms) {
+                const button = document.createElement('button');
+                button.textContent = rooms[roomKey].name;
+                button.dataset.roomKey = roomKey;
+                button.addEventListener('click', () => selectRoom(roomKey));
+                roomListContainer.appendChild(button);
+            }
+            document.querySelectorAll('#room-list-container button').forEach(btn => {
+                if (btn.dataset.roomKey === currentRoomKey) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // --- 캐릭터 선택 핸들러 ---
+        // selectChatHistory: true (기본값)는 해당 캐릭터의 대화 기록을 불러옴
+        // false는 불러오지 않고 UI만 업데이트 (예: 자동 전환 시 불필요한 메시지 방지)
+        function selectCharacter(key, loadChatHistory = true) {
+            currentCharacterKey = key;
+            currentCharacter = allCharactersMap[currentCharacterKey];
+
+            // 현재 선택된 캐릭터 UI 업데이트
+            characterNameDisplay.textContent = currentCharacter.name;
+            characterIconDisplay.textContent = currentCharacter.icon;
+
+            // 메이드 및 마스터 템푸스 버튼 활성화/비활성화 업데이트
+            document.querySelectorAll('#maid-list-container button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            masterTempusBtn.classList.remove('active');
+
+            const selectedBtn = document.querySelector(`button[data-character-key="${currentCharacterKey}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('active');
+            } else if (currentCharacterKey === "master_tempus") {
+                masterTempusBtn.classList.add('active');
+            }
+
+            // 채팅창 내용 업데이트
+            chatDiv.innerHTML = ''; 
+            initializeCharacterChat(currentCharacterKey); 
+            let currentChatData = chatHistories[currentCharacterKey];
+
+            // 대화 기록 로드를 요청한 경우에만 기록을 출력
+            if (loadChatHistory) {
+                // 마스터 템푸스는 항상 환영 메시지부터 시작
+                if (currentCharacterKey === "master_tempus") {
+                     appendMessage(currentCharacter.greeting, 'bot', true);
+                } else {
+                    // 일반 메이드 선택 시
+                    // 요약 내용이 있으면 먼저 출력
+                    if (currentChatData.currentSummary) {
+                        appendMessage(`(이전 대화 요약: ${currentChatData.currentSummary})`, 'bot', true);
+                    }
+                    // 현재 캐릭터의 대화 기록 출력
+                    if (currentChatData.history && currentChatData.history.length > 0) {
+                        currentChatData.history.forEach(msg => {
+                            if (msg.role === "user") {
+                                appendMessage(`${msg.parts[0].text}`, 'user');
+                            } else if (msg.role === "model") {
+                                appendMessage(`${msg.parts[0].text}`, 'bot', true);
+                            }
+                        });
+                    } else {
+                        // 기록이 없으면 환영 메시지 출력
+                        appendMessage(`${currentCharacter.greeting}`, 'bot', true);
+                    }
+                }
+            }
+            
+            // 모든 UI 및 상태 업데이트
+            updateCharacterDisplay(); // 상태창 업데이트 포함
+            // updateReservationStatus()와 checkConversationAvailability()는 updateCharacterDisplay 내에서 호출되므로 여기서 별도 호출 불필요
+            saveAllState();
+        }
+
+        // --- 방 선택 핸들러 ---
+        function selectRoom(key) {
+            currentRoomKey = key;
+            chatDiv.innerHTML = '';
+
+            appendMessage(`주인님께서 '${rooms[currentRoomKey].name}'(으)로 이동하셨습니다. ${rooms[currentRoomKey].description}`, 'bot', true);
+
+            // 방을 이동하면 예약 상태에 따라 메이드가 자동으로 등장하거나, 마스터 템푸스로 유지
+            // 이때 selectCharacter는 대화 기록 로드 없이 UI만 갱신해야 함
+            if (globalReservation.active && globalReservation.maidKey && currentRoomKey === globalReservation.reservedRoom) {
+                selectCharacter(globalReservation.maidKey, true); // 예약된 방에 입장 시 메이드로 전환 (대화 기록 로드)
+            } else {
+                selectCharacter("master_tempus", true); // 예약된 방이 아니면 마스터 템푸스로 전환 (대화 기록 로드)
+            }
+            
+            updateCharacterDisplay();
+            saveAllState();
+        }
+
+        // --- 예약 옵션 채우기 함수 ---
+        function populateReservationOptions() {
+            // 메이드 선택
+            reserveMaidSelect.innerHTML = '<option value="">--- 대화할 메이드 선택 ---</option>';
+            dailyShiftMaids.forEach(maidKey => {
+                const maid = allPlayableMaids[maidKey];
+                const option = document.createElement('option');
+                option.value = maidKey;
+                option.textContent = maid.name;
+                // 해당 메이드의 남은 턴 수가 0이면 선택 불가능하게
+                if (maid.dailyTurnsLeft <= 0) {
+                    option.disabled = true;
+                    option.textContent += " (대화 횟수 소진)";
+                }
+                reserveMaidSelect.appendChild(option);
+            });
+
+            // 날짜 선택 (오늘, 내일, 모레)
+            reserveDateSelect.innerHTML = '';
+            for (let i = 0; i < 3; i++) { // 오늘 포함 3일
+                const date = new Date(gameTime);
+                date.setDate(gameTime.getDate() + i);
+                const option = document.createElement('option');
+                option.value = date.toISOString().slice(0, 10); //YYYY-MM-DD
+                option.textContent = `${date.getMonth() + 1}월 ${date.getDate()}일 (${['오늘', '내일', '모레'][i]})`;
+                reserveDateSelect.appendChild(option);
+            }
+            
+            // 시간 선택 (오전 9시 ~ 오후 6시)
+            reserveTimeSelect.innerHTML = '';
+            for (let h = 9; h <= 18; h++) {
+                const hour = h.toString().padStart(2, '0');
+                const option = document.createElement('option');
+                option.value = `${hour}:00`;
+                option.textContent = `${hour}:00`;
+                reserveTimeSelect.appendChild(option);
+            }
+
+            // 기존 예약이 있다면 해당 값으로 선택박스 기본값 설정
+            if (globalReservation.time && globalReservation.maidKey && globalReservation.reservedRoom) {
+                reserveMaidSelect.value = globalReservation.maidKey;
+                reserveDateSelect.value = globalReservation.time.toISOString().slice(0, 10);
+                const hours = globalReservation.time.getHours().toString().padStart(2, '0');
+                reserveTimeSelect.value = `${hours}:00`;
+            } else {
+                 // 예약이 없으면 초기값으로 설정
+                 reserveMaidSelect.value = '';
+                 reserveDateSelect.value = gameTime.toISOString().slice(0, 10); // 오늘 날짜로
+                 reserveTimeSelect.value = '09:00'; // 오전 9시로
+            }
+            checkReservationFormValidity(); // 예약 폼 유효성 확인 함수 이름 변경
+        }
+
+        // 예약 폼 유효성 확인 및 UI 업데이트 (예약 폼 버튼 활성화/비활성화용)
+        function checkReservationFormValidity() {
+            const selectedMaidKey = reserveMaidSelect.value;
+            const selectedDateStr = reserveDateSelect.value;
+            const selectedTimeStr = reserveTimeSelect.value;
+
+            const reserveBtn = document.getElementById('reserve-btn');
+
+            if (!selectedMaidKey || !selectedDateStr || !selectedTimeStr) {
+                reserveBtn.disabled = true;
+                reservationStatusDiv.textContent = "모든 예약 정보를 선택해주세요.";
+                reservationStatusDiv.className = "reservation-status";
+                return;
+            }
+
+            const selectedDateTime = new Date(`${selectedDateStr}T${selectedTimeStr}:00`);
+
+            // 현재 게임 시간보다 이전 시간은 예약 불가능
+            if (selectedDateTime < gameTime) {
+                reserveBtn.disabled = true;
+                reservationStatusDiv.textContent = "과거 시간은 예약할 수 없습니다.";
+                reservationStatusDiv.className = "reservation-status expired-chat";
+                return;
+            }
+
+            // 선택된 메이드의 대화 횟수가 0이면 예약 불가능
+            if (allPlayableMaids[selectedMaidKey] && allPlayableMaids[selectedMaidKey].dailyTurnsLeft <= 0) {
+                reserveBtn.disabled = true;
+                reservationStatusDiv.textContent = `'${allPlayableMaids[selectedMaidKey].name}' 메이드와의 대화 횟수를 모두 사용했습니다.`;
+                reservationStatusDiv.className = "reservation-status expired-chat";
+                return;
+            }
+
+            // 이미 활성 예약이 있는 경우, 기존 예약과 충돌하는지 확인
+            if (globalReservation.time && !globalReservation.ended) {
+                const existingReservationStart = globalReservation.time.getTime();
+                const existingReservationEnd = existingReservationStart + 60 * 60 * 1000; // 1시간 예약
+
+                const newReservationStart = selectedDateTime.getTime();
+                const newReservationEnd = newReservationStart + 60 * 60 * 1000;
+
+                // 시간 충돌 (완전히 겹치거나 일부 겹치는 경우)
+                const timeOverlap = !(newReservationEnd <= existingReservationStart || newReservationStart >= existingReservationEnd);
+                
+                // 새로운 예약이 기존 예약 시간과 겹치는 경우
+                if (timeOverlap) {
+                     reserveBtn.disabled = true;
+                     reservationStatusDiv.textContent = "선택하신 시간은 이미 예약되어 있거나 충돌합니다.";
+                     reservationStatusDiv.className = "reservation-status expired-chat";
+                     return;
+                }
+            }
+            
+            // 모든 검사 통과 시 예약 가능
+            reserveBtn.disabled = false;
+            reservationStatusDiv.textContent = "예약 확정 버튼을 눌러주세요.";
+            reservationStatusDiv.className = "reservation-status active-chat";
+        }
+
+
+        // --- 이벤트 리스너 ---
+        sendBtn.addEventListener('click', sendMessage);
+        clearBtn.addEventListener('click', clearChat);
+        userInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // 마스터 템푸스 버튼 클릭 시 마스터 템푸스 선택 (예약 UI 열림)
+        masterTempusBtn.addEventListener('click', () => selectCharacter("master_tempus"));
+
+        // 예약 UI 관련 이벤트 리스너
+        reserveMaidSelect.addEventListener('change', checkReservationFormValidity);
+        reserveDateSelect.addEventListener('change', checkReservationFormValidity);
+        reserveTimeSelect.addEventListener('change', checkReservationFormValidity);
+
+        reserveBtn.addEventListener('click', function() {
+            const selectedMaidKey = reserveMaidSelect.value;
+            const selectedDateStr = reserveDateSelect.value;
+            const selectedTimeStr = reserveTimeSelect.value;
+
+            if (!selectedMaidKey || !selectedDateStr || !selectedTimeStr) {
+                alert("모든 예약 정보를 선택해주세요.");
+                return;
+            }
+
+            const reservationDateTime = new Date(`${selectedDateStr}T${selectedTimeStr}:00`);
+
+            // 추가적인 유효성 검사 (클라이언트 단에서 다시 확인)
+            if (reservationDateTime < gameTime) {
+                alert("과거 시간은 예약할 수 없습니다.");
+                return;
+            }
+            
+            // 선택된 메이드의 대화 횟수가 0이면 예약 불가능
+            if (allPlayableMaids[selectedMaadKey] && allPlayableMaids[selectedMaidKey].dailyTurnsLeft <= 0) {
+                alert(`'${allPlayableMaids[selectedMaidKey].name}' 메이드와의 대화 횟수를 모두 사용했습니다. 이 메이드는 예약할 수 없습니다.`);
+                return;
+            }
+
+            // 기존 예약 충돌 확인 (새로운 예약과 겹치는지 다시 확인)
+            if (globalReservation.time && !globalReservation.ended) {
+                const existingReservationStart = globalReservation.time.getTime();
+                const existingReservationEnd = existingReservationStart + 60 * 60 * 1000; // 1시간 예약
+
+                const newReservationStart = reservationDateTime.getTime();
+                const newReservationEnd = newReservationStart + 60 * 60 * 1000;
+
+                const timeOverlap = !(newReservationEnd <= existingReservationStart || newReservationStart >= existingReservationEnd);
+                
+                if (timeOverlap) { 
+                     alert("선택하신 시간은 이미 예약되어 있거나 충돌합니다. 다른 시간을 선택해주세요.");
+                     return;
+                }
+            }
+
+            // 비어있는 방 랜덤 배정
+            const availableRooms = reservableRoomKeys.filter(roomKey => {
+                // 이 곳에 '특정 방이 이미 다른 예약으로 차있는지' 등의 고급 로직이 들어갈 수 있지만,
+                // 현재는 단순히 예약 가능한 방 중에서 랜덤으로 선택
+                return true; 
+            });
+
+            if (availableRooms.length === 0) {
+                alert("현재 예약 가능한 빈 방이 없습니다. 다른 시간을 선택하거나 '1일 전진' 해주세요.");
+                return;
+            }
+            const randomRoomKey = availableRooms[Math.floor(Math.random() * availableRooms.length)];
+
+
+            // 예약 성공 시 globalReservation 업데이트
+            globalReservation = {
+                maidKey: selectedMaidKey,
+                time: reservationDateTime,
+                active: false, // 예약 확정 시에는 아직 활성화되지 않음
+                ended: false,
+                reservedRoom: randomRoomKey // 랜덤으로 배정된 방 키 할당
+            };
+            alert(`마스터 템푸스가 '${allCharactersMap[selectedMaidKey].name}' 메이드와 ${reservationDateTime.toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}에 '${rooms[randomRoomKey].name}'에서 주인님을 위한 시간을 예약했습니다. 예약 시간에 해당 방으로 이동해 주세요!`);
+            
+            updateReservationStatus(); // 예약 상태 UI 및 `globalReservation.active` 업데이트
+            saveAllState();
+            populateReservationOptions(); // 예약 후 예약 옵션 다시 채워 충돌 정보 등 업데이트
+        });
+
+
+        forward1HourBtn.addEventListener('click', function() {
+            gameTime.setHours(gameTime.getHours() + 1);
+            updateGameTimeDisplay(); 
+            updateReservationStatus(); // 시간이 변경되면 예약 상태를 다시 확인하고 UI 업데이트
+            updateStatusPanel();
+            saveAllState();
+            // 시간이 변경되었으므로 예약 폼의 유효성도 다시 확인
+            if (currentCharacterKey === "master_tempus") { 
+                populateReservationOptions();
+            }
+        });
+
+        forward1DayBtn.addEventListener('click', function() {
+            gameTime.setDate(gameTime.getDate() + 1);
+            gameTime.setHours(9, 0, 0, 0); // 새 날짜의 시작 시간은 오전 9시로 초기화
+
+            // 날짜가 바뀌었으므로 출근부 갱신
+            generateDailyShift(); 
+
+            // 예약 상태 초기화 (날짜가 바뀌었으므로 이전 예약은 무효)
+            globalReservation = { maidKey: null, time: null, active: false, ended: false, reservedRoom: null };
+            
+            // 현재 선택된 캐릭터를 마스터 템푸스로 강제 전환
+            selectCharacter("master_tempus", true); // 새 날에는 마스터 템푸스에게 예약부터 (대화 기록 로드)
+
+            updateGameTimeDisplay(); 
+            updateReservationStatus();
+            updateStatusPanel();
+            saveAllState();
+            populateReservationOptions(); // 예약 UI 업데이트
+        });
+
+        // 햄버거 메뉴 토글 (모바일)
+        hamburgerMenu.addEventListener('click', () => {
+            statusPanel.classList.add('active'); 
+        });
+        // 상태 패널 닫기 버튼 (모바일)
+        closeStatusPanelBtn.addEventListener('click', () => {
+            statusPanel.classList.remove('active');
+        });
+
+
+        // --- 초기화 로직 (페이지 로드 시 실행) ---
+        // 모든 상태 로드
+        loadAllState();
+
+        // 출근부 갱신 로직 (날짜 변경되었거나 출근부가 비어있으면)
+        const currentGameDate = gameTime.toISOString().slice(0, 10);
+        if (currentGameDate !== lastShiftDate || dailyShiftMaids.length === 0) {
+            generateDailyShift(); 
+        } else {
+            populateMaidButtons(); 
+        }
+        
+        // 방 버튼 채우기
+        populateRoomButtons();
+
+        // 초기 로드 시 예약 상태에 따라 캐릭터 선택 및 채팅창 메시지 설정
+        // updateReservationStatus()는 `globalReservation.active` 상태를 결정하고 `checkConversationAvailability()`를 호출
+        // selectCharacter()는 `currentCharacterKey`를 설정하고 UI를 업데이트하며 `checkConversationAvailability()`를 호출
+        updateReservationStatus(); 
+        selectCharacter(currentCharacterKey, true); // 초기 로드 시 대화 기록 로드 (시작 메시지 등 포함)
+        
+        // 모든 상태 패널 업데이트
+        updateStatusPanel();
+    </script>
+</body>
+</html>
